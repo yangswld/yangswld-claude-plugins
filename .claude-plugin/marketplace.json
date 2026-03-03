@@ -1,0 +1,21 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "yangswld-claude-plugins",
+  "version": "1.0.0",
+  "description": "Claude Code plugins by yang.jianrong",
+  "owner": {
+    "name": "yang.jianrong"
+  },
+  "plugins": [
+    {
+      "name": "win-toast-notification",
+      "description": "Windows Toast notification when Claude Code needs your attention (BurntToast)",
+      "version": "1.0.0",
+      "author": {
+        "name": "yang.jianrong"
+      },
+      "source": "./plugins/win-toast-notification",
+      "category": "productivity"
+    }
+  ]
+}

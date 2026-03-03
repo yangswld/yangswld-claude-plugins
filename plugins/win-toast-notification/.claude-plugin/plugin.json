@@ -1,0 +1,7 @@
+{
+  "name": "win-toast-notification",
+  "description": "Windows Toast notification when Claude Code needs your attention (BurntToast)",
+  "author": {
+    "name": "yang.jianrong"
+  }
+}

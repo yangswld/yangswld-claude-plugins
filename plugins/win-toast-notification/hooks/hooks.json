@@ -1,0 +1,15 @@
+{
+  "description": "Windows Toast notification on Claude Code Notification event",
+  "hooks": {
+    "Notification": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File \"${CLAUDE_PLUGIN_ROOT}/scripts/toast-notify.ps1\""
+          }
+        ]
+      }
+    ]
+  }
+}
