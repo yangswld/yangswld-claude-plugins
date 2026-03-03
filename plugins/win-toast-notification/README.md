@@ -8,9 +8,9 @@ Windows Toast notification plugin for Claude Code. Displays a native Windows not
 - **Click-to-focus**: clicking a notification activates the terminal/IDE window that spawned it
 - Auto-detects host window (Windows Terminal, IntelliJ IDEA, VS Code, etc.)
 - Supports multiple concurrent Claude Code sessions in different windows
-- Shows session name (set via `/rename`) as notification title
-- Shows model name in notification body
-- Custom Claude Code icon
+- Shows "Claude Code needs your attention" as notification text
+- Custom AUMID registration: attribution area displays "Claude Code" name and small icon
+- Falls back to default PowerShell notification identity when AUMID is not registered
 - Cross-platform safe: silently skips on macOS/Linux
 
 ## Requirements
@@ -40,7 +40,7 @@ In Claude Code:
 
 ### 3. Run setup (one-time)
 
-Installs BurntToast module and registers the `claude-notify://` click-to-focus protocol. Ask Claude to run the setup command — it will execute automatically, no copy-paste needed:
+Installs BurntToast module, registers the `claude-notify://` click-to-focus protocol, and registers notification identity. Ask Claude to run the setup command — it will execute automatically, no copy-paste needed:
 
 ```
 /win-toast-notification:setup
@@ -107,15 +107,14 @@ Each notification carries the HWND of the window that created it:
 
 ## Notification Content
 
+### Attribution Area (requires AUMID registration)
+
+- "Claude Code" + small Claude icon (registered via setup Step 3)
+- Shows "Windows PowerShell" when AUMID is not registered
+
 ### Title
 
-- Custom session name (set via `/rename` command)
-- Falls back to `session_id` if no custom name is set
-
-### Body
-
-- Model name (e.g., `claude-opus-4-6`) + "needs your attention"
-- Falls back to "Claude Code" if model name is not found
+- "Claude Code needs your attention"
 
 ## Troubleshooting
 
@@ -128,18 +127,13 @@ Each notification carries the HWND of the window that created it:
 ### Click does nothing
 
 - Verify protocol registration: `Get-ItemProperty "HKCU:\Software\Classes\claude-notify"`
-- Re-run the protocol registration command from Step 3
+- Re-run the protocol registration step from setup
 - If plugin path changed, re-register with the updated path
 
-### Icon not showing
+### Notification shows as "Windows PowerShell"
 
-- The icon file (`claude-color-dark-96x96.png`) is bundled with the plugin
-- Verify it exists in the plugin's `images/` directory
-
-### Shows old session name
-
-- The script reads the **last** `custom-title` record from the transcript
-- Use `/rename` to set a new session name
+- Run setup Step 3 to register the notification identity (AUMID)
+- Verify registration: `Get-ItemProperty "HKCU:\Software\Classes\AppUserModelId\ClaudeCode.Notification"`
 
 ### Module install fails
 
@@ -153,6 +147,7 @@ Each notification carries the HWND of the window that created it:
 | No tab-level targeting | WT/IDE don't expose Tab API | Must switch tab manually |
 | Protocol requires one-time setup | Windows custom URI needs registry entry | Guided in setup, one-time |
 | Script path hardcoded in registry | Registry stores absolute path | Re-register if plugin moves |
+| AUMID IconUri is an absolute path | Registry stores absolute path | Re-run setup Step 3 after plugin reinstall |
 | Single-process multi-window WT | `MainWindowHandle` may return wrong window | Rare scenario, acceptable |
 
 ## Development
@@ -175,4 +170,5 @@ claude plugin validate ./.claude/marketplace
 - [Claude Code Hooks](https://code.claude.com/docs/en/hooks)
 - [Claude Code Plugins](https://code.claude.com/docs/en/plugins)
 - [Microsoft: Registering a URI Scheme](https://learn.microsoft.com/en-us/previous-versions/windows/internet-explorer/ie-developer/platform-apis/aa767914(v=vs.85))
+- [Microsoft: Send toast from unpackaged apps](https://learn.microsoft.com/en-us/windows/apps/design/shell/tiles-and-notifications/send-local-toast-other-apps)
 - [Win32 SetForegroundWindow](https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-setforegroundwindow)

@@ -10,44 +10,8 @@ if ($winPSUserModules -notin ($env:PSModulePath -split ';')) {
 
 Import-Module BurntToast
 
-# Read JSON data from stdin
-$inputJson = [Console]::In.ReadToEnd()
-$data = $inputJson | ConvertFrom-Json
-
-# Get session title from transcript file
-$sessionTitle = "Claude Code"
-$transcriptPath = $data.transcript_path
-
-if ($transcriptPath -and (Test-Path $transcriptPath)) {
-    # Search for custom-title record (get LAST/most recent)
-    $customTitleLine = Select-String -Path $transcriptPath -Pattern '"type":"custom-title"' -SimpleMatch | Select-Object -Last 1
-    if ($customTitleLine) {
-        $customTitleData = $customTitleLine.Line | ConvertFrom-Json
-        if ($customTitleData.customTitle) {
-            $sessionTitle = $customTitleData.customTitle
-        }
-    }
-}
-
-# Fallback to session_id if customTitle not found
-if ($sessionTitle -eq "Claude Code" -and $data.session_id) {
-    $sessionTitle = $data.session_id
-}
-
-# Get model name from transcript file (get LAST/most recent assistant message)
-$modelName = "Claude Code"
-if ($transcriptPath -and (Test-Path $transcriptPath)) {
-    $assistantLine = Select-String -Path $transcriptPath -Pattern '"type":"assistant"' -SimpleMatch | Select-Object -Last 1
-    if ($assistantLine) {
-        $assistantData = $assistantLine.Line | ConvertFrom-Json
-        if ($assistantData.message.model) {
-            $modelName = $assistantData.message.model
-        }
-    }
-}
-
-# Resolve icon path relative to script location (portable, no hardcoded user path)
-$iconPath = Join-Path $PSScriptRoot "..\images\claude-color-dark-96x96.png"
+# Consume stdin to prevent pipe hang (hook always sends JSON via stdin)
+[void][Console]::In.ReadToEnd()
 
 # --- Find host window HWND (walk process tree up to first visible window) ---
 # Reference: https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-iswindowvisible
@@ -74,13 +38,28 @@ do {
 
 # --- Build notification with Protocol activation (click-to-focus) ---
 # Reference: https://github.com/Windos/BurntToast (New-BTContent -ActivationType Protocol)
-$text1 = New-BTText -Text $sessionTitle
-$text2 = New-BTText -Text "$modelName needs your attention"
-$appLogoImage = New-BTImage -Source $iconPath -AppLogoOverride -Crop Circle
-$binding = New-BTBinding -Children $text1, $text2 -AppLogoOverride $appLogoImage
-$visual = New-BTVisual -BindingGeneric $binding
+$text1 = New-BTText -Text "Claude Code needs your attention"
 
+$appId = "ClaudeCode.Notification"
+$aumidRegistered = Test-Path "HKCU:\Software\Classes\AppUserModelId\$appId"
+
+$binding = New-BTBinding -Children $text1
+
+$visual = New-BTVisual -BindingGeneric $binding
 $launchUri = "claude-notify://focus/$hostHwnd"
 $content = New-BTContent -Visual $visual -ActivationType Protocol -Launch $launchUri
 
-Submit-BTNotification -Content $content
+if ($aumidRegistered) {
+    # Bypass BurntToast's Submit-BTNotification (which hardcodes PowerShell's AUMID)
+    # Use WinRT API directly with custom AUMID
+    # Types from Microsoft.Windows.SDK.NET.dll loaded by BurntToast (BurntToast.psm1:2560)
+    $toastXml = [Windows.Data.Xml.Dom.XmlDocument]::new()
+    # Strip BurntToast data-binding placeholders {text} → text (same as BurntToast.psm1:2273-2278)
+    $xmlContent = $content.GetContent() -replace '<text(.*?)>\{', '<text$1>'
+    $xmlContent = $xmlContent.Replace('}</text>', '</text>')
+    $toastXml.LoadXml($xmlContent)
+    $toast = [Windows.UI.Notifications.ToastNotification]::new($toastXml)
+    [Windows.UI.Notifications.ToastNotificationManager]::CreateToastNotifier($appId).Show($toast)
+} else {
+    Submit-BTNotification -Content $content
+}

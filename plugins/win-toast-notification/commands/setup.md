@@ -1,4 +1,4 @@
-Install BurntToast module and register the `claude-notify://` protocol handler. Execute all commands below via Bash tool — do not ask the user to copy-paste manually.
+Install BurntToast module, register the `claude-notify://` protocol handler, and register notification identity. Execute all commands below via Bash tool — do not ask the user to copy-paste manually.
 
 ## Prerequisites
 
@@ -69,9 +69,37 @@ Get-ItemProperty "HKCU:\Software\Classes\claude-notify"
 
 You should see `URL Protocol` and `(Default)` properties listed.
 
+## Step 3: Register Notification Identity
+
+Register a custom application identity (AUMID) so the notification attribution area displays "Claude Code" with a small Claude icon, instead of the default "Windows PowerShell" branding. This is a **one-time setup** and does **not** require Administrator privileges (writes to HKCU only).
+
+Reference: [Microsoft - Register your app in the registry](https://learn.microsoft.com/en-us/windows/apps/design/shell/tiles-and-notifications/send-local-toast-other-apps#step-1-register-your-app-in-the-registry)
+
+Execute directly without prompting the user:
+
+```powershell
+$pluginRoot = (Get-ChildItem "$env:USERPROFILE\.claude\plugins\cache\*\win-toast-notification" -Directory |
+               Select-Object -Last 1).FullName
+
+$iconPath = Join-Path $pluginRoot "images\claude-color-dark-96x96.png"
+
+& (Join-Path $pluginRoot "scripts\register-aumid.ps1") -IconPath $iconPath
+```
+
+### Verify AUMID Registration
+
+```powershell
+Get-ItemProperty "HKCU:\Software\Classes\AppUserModelId\ClaudeCode.Notification"
+```
+
+You should see `DisplayName = Claude Code` and `IconUri` pointing to the icon file.
+
+> **Note**: `IconUri` stores an absolute path. If the plugin is reinstalled to a different cache location, re-run this step to update the icon path.
+
 ## Troubleshooting
 
 1. **Network error**: Check your internet connection and access to PowerShell Gallery (https://www.powershellgallery.com)
 2. **Module not found after install**: Close and reopen PowerShell, then try `Import-Module BurntToast` again
 3. **Click notification does nothing**: Re-run Step 2 to ensure the protocol is registered with the correct plugin path
 4. **Protocol path changed**: If you move the plugin to a different location, re-run Step 2 with the updated `$pluginRoot`
+5. **Notification shows as "Windows PowerShell"**: Re-run Step 3 to register the notification identity
