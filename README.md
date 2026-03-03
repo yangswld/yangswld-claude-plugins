@@ -29,6 +29,11 @@ Windows Toast notification when Claude Code needs your attention. Click the noti
 /plugin install win-toast-notification@yangswld-claude-plugins
 ```
 
+**Setup (one-time):**
+```
+/win-toast-notification:setup
+```
+
 ## Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request.
