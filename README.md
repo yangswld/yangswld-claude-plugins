@@ -20,9 +20,7 @@ Windows Toast notification when Claude Code needs your attention. Click the noti
 - Native Windows Toast notification via BurntToast
 - Click-to-focus: clicking a notification activates the terminal/IDE window
 - Auto-detects host window (Windows Terminal, IntelliJ IDEA, VS Code, etc.)
-- Shows session name (set via `/rename`) as notification title
-- Shows model name in notification body
-- Cross-platform safe: silently skips on macOS/Linux
+- Custom AUMID registration: attribution area displays "Claude Code" name and icon
 
 **Installation:**
 ```

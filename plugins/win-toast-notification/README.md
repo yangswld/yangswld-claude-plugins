@@ -11,7 +11,6 @@ Windows Toast notification plugin for Claude Code. Displays a native Windows not
 - Shows "Claude Code needs your attention" as notification text
 - Custom AUMID registration: attribution area displays "Claude Code" name and small icon
 - Falls back to default PowerShell notification identity when AUMID is not registered
-- Cross-platform safe: silently skips on macOS/Linux
 
 ## Requirements
 
@@ -154,13 +153,13 @@ Each notification carries the HWND of the window that created it:
 
 ```bash
 # Load plugin in-place during development (changes take effect on restart)
-claude --plugin-dir ./.claude/marketplace/plugins/win-toast-notification
+claude --plugin-dir ./plugins/win-toast-notification
 
 # Validate marketplace manifest
-claude plugin validate ./.claude/marketplace
+claude plugin validate ./.claude-plugin
 
 # Install from marketplace (copies to cache, source changes won't affect installed version)
-# Cache location: ~/.claude/plugins/cache/*/win-toast-notification/
+# Cache location: ~/.claude/plugins/cache/<marketplace>/win-toast-notification/<version>/
 /plugin install win-toast-notification@yangswld-claude-plugins
 ```
 
