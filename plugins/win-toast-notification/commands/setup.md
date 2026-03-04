@@ -1,4 +1,6 @@
-Install BurntToast module, register the `claude-notify://` protocol handler, and register notification identity. Execute all commands below via Bash tool — do not ask the user to copy-paste manually.
+Install BurntToast module, register the `claude-notify://` protocol handler, and register notification identity.
+
+**Execution method**: For each PowerShell code block below, save the code to a temporary `.ps1` file (e.g., `~/.claude/work/setup-step.ps1`), then execute via `powershell.exe -NoProfile -ExecutionPolicy Bypass -File "<path>"`. Delete the temp file after each step succeeds. Do not pass PowerShell code inline via `-Command` — bash escaping will break it.
 
 ## Prerequisites
 
@@ -40,12 +42,11 @@ This registers the `claude-notify://` URI protocol so clicking a notification ac
 Execute directly without prompting the user:
 
 ```powershell
-# Auto-detect plugin root path (works with any marketplace name)
-$pluginRoot = (Get-ChildItem "$env:USERPROFILE\.claude\plugins\cache\*\win-toast-notification" -Directory |
+# Auto-detect plugin root path (marketplace/plugin-name/version)
+$pluginRoot = (Get-ChildItem "$env:USERPROFILE\.claude\plugins\cache\*\win-toast-notification\*" -Directory |
+               Where-Object { Test-Path (Join-Path $_.FullName "scripts") } |
                Select-Object -Last 1).FullName
-
-# If using --plugin-dir for development, override with the actual path:
-# $pluginRoot = "C:\path\to\your\project\.claude\marketplace\plugins\win-toast-notification"
+if (-not $pluginRoot) { throw "Plugin root not found. Is the plugin installed?" }
 
 $scriptPath = Join-Path $pluginRoot "scripts\focus-terminal.ps1"
 
@@ -78,8 +79,10 @@ Reference: [Microsoft - Register your app in the registry](https://learn.microso
 Execute directly without prompting the user:
 
 ```powershell
-$pluginRoot = (Get-ChildItem "$env:USERPROFILE\.claude\plugins\cache\*\win-toast-notification" -Directory |
+$pluginRoot = (Get-ChildItem "$env:USERPROFILE\.claude\plugins\cache\*\win-toast-notification\*" -Directory |
+               Where-Object { Test-Path (Join-Path $_.FullName "scripts") } |
                Select-Object -Last 1).FullName
+if (-not $pluginRoot) { throw "Plugin root not found. Is the plugin installed?" }
 
 $iconPath = Join-Path $pluginRoot "images\claude-color-dark-96x96.png"
 
